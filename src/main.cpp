@@ -21,11 +21,6 @@ struct PixelRGB
     COLOR_TYPE b;
 };
 
-using Vec = Vec3<float>;
-using Point = Point3<float>;
-using Ray = Ray3<Point, Vec>;
-using Sphere = Sphere3<float>;
-
 template <typename SPHERE_CONTAINER>
 class World
 {
@@ -36,7 +31,11 @@ public:
     {}
 
     template <typename T>
-    bool is_hit(const Ray& ray, T t_min, T t_max, HitRecord<T>& record) const
+    bool is_hit(
+        const Ray3<Point3<T>, Vec3<T>>& ray,
+        T t_min,
+        T t_max,
+        HitRecord<T>& record) const
     {
         bool hit_anything = false;
         auto closest_so_far = t_max;
@@ -56,12 +55,21 @@ private:
     SPHERE_CONTAINER& m_spheres;
 };
 
+using UnderlyingType = double;
+using Vec = Vec3<UnderlyingType>;
+using Point = Point3<UnderlyingType>;
+using Ray = Ray3<Point, Vec>;
+using Sphere = Sphere3<UnderlyingType>;
+using LambertianMat = Lambertian<UnderlyingType>;
+using DialectricMat = Dialectric<UnderlyingType>;
+using MetalMat = Metal<UnderlyingType>;
+
 Rng rng{(unsigned)time(0)};
 
-Lambertian<float> material_ground{Vec{0.5, 0.5, 0.5}};
-Dialectric<float> material1{1.5};
-Lambertian<float> material2{Vec{0.4, 0.2, 0.1}};
-Metal<float> material3{Vec{0.7, 0.6, 0.5}, 0};
+LambertianMat material_ground{Vec{0.5, 0.5, 0.5}};
+DialectricMat material1{1.5};
+LambertianMat material2{Vec{0.4, 0.2, 0.1}};
+MetalMat      material3{Vec{0.7, 0.6, 0.5}, 0};
 
 constexpr auto range_min = -11;
 constexpr auto range_max = 11;
@@ -77,9 +85,9 @@ std::array<Sphere, 4+num_random> spheres = {
     Sphere{ Point{ 4, 1, 0}, 1,       &material3 },
 };
 
-std::array<Lambertian<float>, num_lamb> material_lamb;
-std::array<Metal<float>, num_metal> material_metal;
-std::array<Dialectric<float>, num_glass> material_glass;
+std::array<LambertianMat, num_lamb>  material_lamb;
+std::array<MetalMat,      num_metal> material_metal;
+std::array<DialectricMat, num_glass> material_glass;
 
 World<decltype(spheres)> world{spheres};
 
@@ -87,50 +95,50 @@ void generate_world()
 {
     for (auto& mat : material_lamb)
     {
-        mat = Lambertian<float>{Vec{
-                rng.random<float>(),
-                rng.random<float>(),
-                rng.random<float>()}};
+        mat = {Vec{
+                rng.random<UnderlyingType>(),
+                rng.random<UnderlyingType>(),
+                rng.random<UnderlyingType>()}};
     }
 
     for (auto& mat : material_metal)
     {
         auto albedo = Vec{
-            rng.random<float>(0.5, 1),
-            rng.random<float>(0.5, 1),
-            rng.random<float>(0.5, 1)
+            rng.random<UnderlyingType>(0.5, 1),
+            rng.random<UnderlyingType>(0.5, 1),
+            rng.random<UnderlyingType>(0.5, 1)
         };
-        auto fuzz = rng.random<float>(0, 0.5);
-        mat = Metal<float>{albedo, fuzz};
+        auto fuzz = rng.random<UnderlyingType>(0, 0.5);
+        mat = {albedo, fuzz};
     }
 
     for (auto& mat : material_glass)
     {
-        mat = Dialectric<float>{1.5};
+        mat = {1.5};
     }
 
     int index = 4;
     for (int a = range_min; a < range_max; a++) {
         for (int b = range_min; b < range_max; b++) {
-            auto choose_mat = rng.random<float>();
-            Point center(a + 0.9 * rng.random<float>(),
+            auto choose_mat = rng.random<UnderlyingType>();
+            Point center(a + 0.9 * rng.random<UnderlyingType>(),
                          0.2,
-                         b + 0.9 * rng.random<float>());
+                         b + 0.9 * rng.random<UnderlyingType>());
 
             if (make_vec(center, Point{4, 0.2, 0}).length() > 0.9) {
                 if (choose_mat < 0.8) {
                     // diffuse
-                    auto m = rng.random<float>() * num_lamb;
+                    auto m = rng.random<UnderlyingType>() * num_lamb;
                     auto& material = material_lamb[(int)m];
                     spheres[index] = {center, 0.2, &material};
                 } else if (choose_mat < 0.95) {
                     // metal
-                    auto m = rng.random<float>() * num_metal;
+                    auto m = rng.random<UnderlyingType>() * num_metal;
                     auto& material = material_metal[(int)m];
                     spheres[index] = {center, 0.2, &material};
                 } else {
                     // glass
-                    auto m = rng.random<float>() * num_glass;
+                    auto m = rng.random<UnderlyingType>() * num_glass;
                     auto& material = material_glass[(int)m];
                     spheres[index] = {center, 0.2, &material};
                 }
@@ -175,15 +183,15 @@ Vec color(const Ray& ray, const World& world, int depth)
 template <typename Image, typename World>
 void generate_image(Image& image, const World& world)
 {
-    std::uniform_real_distribution<float> distr(0, 1);
     auto lookfrom = Point{13, 2, 3};
     auto lookat = Point{0, 0, 0};
-    Camera<float> camera{
+
+    Camera<UnderlyingType> camera{
         lookfrom,
         lookat,
         Vec{0, 1, 0},
         20,
-        (float)image.width/image.height,
+        (UnderlyingType)image.width/image.height,
         0.1,
         10
     };
@@ -196,19 +204,19 @@ void generate_image(Image& image, const World& world)
             Vec pixel_color{0, 0, 0};
             for (int sample = 0; sample < num_samples; ++sample)
             {
-                const auto u = (x + rng.random<float>())/(image.width-1);
-                const auto v = (y + rng.random<float>())/(image.height-1);
+                const auto u = (x + rng.random<UnderlyingType>())/(image.width-1);
+                const auto v = (y + rng.random<UnderlyingType>())/(image.height-1);
                 const auto ray = camera.get_ray(u, v, rng);
 
-                pixel_color = pixel_color + color<float, World>(ray, world, 0);
+                pixel_color = pixel_color + color<UnderlyingType, World>(ray, world, 0);
             }
-            pixel_color = pixel_color * (1.0f / num_samples);
+            pixel_color = pixel_color / (UnderlyingType) num_samples;
 
             // gamma corrected
             pixel_color = Vec{
-                (float)sqrt(pixel_color.x()),
-                (float)sqrt(pixel_color.y()),
-                (float)sqrt(pixel_color.z())
+                (UnderlyingType)sqrt(pixel_color.x()),
+                (UnderlyingType)sqrt(pixel_color.y()),
+                (UnderlyingType)sqrt(pixel_color.z())
             };
 
             image[x][y] = {
