@@ -25,23 +25,14 @@ public:
                m_e[1] * m_e[1] +
                m_e[2] * m_e[2];
     }
-
-    inline void make_unit_vector()
-    {
-        auto k = 1 / length();
-        m_e[0] *= k;
-        m_e[1] *= k;
-        m_e[2] *= k;
-    }
 private:
     T m_e[3] = {};
 };
 
 template <typename T>
-inline Vec3<T> unit_vector(Vec3<T> v)
+inline Vec3<T> unit_vector(const Vec3<T>& v)
 {
-    v.make_unit_vector();
-    return v;
+    return v / v.length();
 }
 
 template <typename T>
