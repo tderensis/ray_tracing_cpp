@@ -158,7 +158,7 @@ void print_ppm_image(const Image& image)
 }
 
 constexpr auto aspect_ratio = 16.0/9.0;
-constexpr int image_width = 1920;
+constexpr int image_width = 400;
 constexpr int image_height = image_width / aspect_ratio;
 
 Image<PixelRGB<int>, image_width, image_height> image;
