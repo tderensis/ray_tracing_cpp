@@ -8,6 +8,7 @@
 #include "Hit.hpp"
 #include "Camera.hpp"
 #include "Material.hpp"
+#include "Color.hpp"
 
 #include <array>
 #include <limits>
@@ -63,6 +64,7 @@ using Sphere = Sphere3<UnderlyingType>;
 using LambertianMat = Lambertian<UnderlyingType>;
 using DialectricMat = Dialectric<UnderlyingType>;
 using MetalMat = Metal<UnderlyingType>;
+using PixelColor = Color<UnderlyingType>;
 
 Rng rng{(unsigned)time(0)};
 
@@ -152,7 +154,7 @@ void generate_world()
 }
 
 template <typename T, typename World>
-Vec color(const Ray& ray, const World& world, int depth)
+PixelColor color(const Ray& ray, const World& world, int depth)
 {
     HitRecord<T> hit_record;
     constexpr T t_min = 0.001;
@@ -167,11 +169,7 @@ Vec color(const Ray& ray, const World& world, int depth)
         if (depth != 0 && ray_was_scattered)
         {
             auto pixel_color = color<T, World>(scattered, world, depth-1);
-            return {
-                attenuation.x() * pixel_color.x(),
-                attenuation.y() * pixel_color.y(),
-                attenuation.z() * pixel_color.z()
-            };
+            return attenuation * pixel_color;
         }
         else
         {
@@ -208,7 +206,7 @@ void generate_image(Image& image, const World& world)
     {
         for (int x = 0; x < image.width; ++x)
         {
-            Vec pixel_color{0, 0, 0};
+            PixelColor pixel_color{0, 0, 0};
             for (int sample = 0; sample < num_samples_per_pixel; ++sample)
             {
                 const auto u = (x + rng.random<UnderlyingType>())/(image.width-1);
@@ -219,17 +217,12 @@ void generate_image(Image& image, const World& world)
             }
             pixel_color = pixel_color / (UnderlyingType) num_samples_per_pixel;
 
-            // gamma corrected
-            pixel_color = Vec{
-                (UnderlyingType)sqrt(pixel_color.x()),
-                (UnderlyingType)sqrt(pixel_color.y()),
-                (UnderlyingType)sqrt(pixel_color.z())
-            };
+            pixel_color = gamma_correct(pixel_color);
 
             image[x][y] = {
-                int(255.99f * pixel_color.x()),
-                int(255.99f * pixel_color.y()),
-                int(255.99f * pixel_color.z())
+                int(255.99f * pixel_color.r()),
+                int(255.99f * pixel_color.g()),
+                int(255.99f * pixel_color.b())
             };
         }
     }
