@@ -13,18 +13,19 @@ public:
         const Ray3<Point3<T>, Vec3<T>>& ray,
         const HitRecord<T>& hit_record,
         Vec3<T>& attenuation,
-        Ray3<Point3<T>, Vec3<T>>& scattered) const = 0;
+        Ray3<Point3<T>, Vec3<T>>& scattered,
+        Rng& rng) const = 0;
 };
 
 template <typename T>
-Vec3<T> random_in_unit_sphere()
+Vec3<T> random_in_unit_sphere(Rng& rng)
 {
     Vec3<T> p{0, 0, 0};
     do {
         p = Vec3<T>{
-            Rng::instance().random<T>(-1, 1),
-            Rng::instance().random<T>(-1, 1),
-            Rng::instance().random<T>(-1, 1)
+            rng.random<T>(-1, 1),
+            rng.random<T>(-1, 1),
+            rng.random<T>(-1, 1)
         };
     } while (p.squared_length() >= 1);
     return p;
@@ -40,10 +41,11 @@ public:
         const Ray3<Point3<T>, Vec3<T>>& ray,
         const HitRecord<T>& hit_record,
         Vec3<T>& attenuation,
-        Ray3<Point3<T>, Vec3<T>>& scattered) const override
+        Ray3<Point3<T>, Vec3<T>>& scattered,
+        Rng& rng) const override
     {
         auto target = hit_record.p + hit_record.normal +
-            random_in_unit_sphere<T>();
+            random_in_unit_sphere<T>(rng);
         scattered = {hit_record.p, make_vec(target, hit_record.p)};
         attenuation = m_albedo;
         return true;
@@ -67,13 +69,14 @@ public:
         const Ray3<Point3<T>, Vec3<T>>& ray,
         const HitRecord<T>& hit_record,
         Vec3<T>& attenuation,
-        Ray3<Point3<T>, Vec3<T>>& scattered) const override
+        Ray3<Point3<T>, Vec3<T>>& scattered,
+        Rng& rng) const override
     {
         auto reflected = reflect(
              unit_vector(ray.direction()), hit_record.normal);
         scattered = {
             hit_record.p,
-            reflected + m_fuzz * random_in_unit_sphere<T>()
+            reflected + m_fuzz * random_in_unit_sphere<T>(rng)
         };
         attenuation = m_albedo;
         return dot(scattered.direction(), hit_record.normal) > 0;
@@ -121,7 +124,8 @@ public:
         const Ray3<Point3<T>, Vec3<T>>& ray,
         const HitRecord<T>& hit_record,
         Vec3<T>& attenuation,
-        Ray3<Point3<T>, Vec3<T>>& scattered) const override
+        Ray3<Point3<T>, Vec3<T>>& scattered,
+        Rng& rng) const override
     {
         attenuation = {1, 1, 1};
 
@@ -142,7 +146,7 @@ public:
         {
             auto refract_prob = schlick<T>(cosine, m_refraction_index);
 
-            if (Rng::instance().random<T>() < refract_prob)
+            if (rng.random<T>() < refract_prob)
             {
                 auto reflected = reflect(ray.direction(), hit_record.normal);
                 scattered = {hit_record.p, reflected};

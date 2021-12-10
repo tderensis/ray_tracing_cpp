@@ -5,12 +5,7 @@
 class Rng
 {
 public:
-
-    static Rng& instance()
-    {
-        static Rng INSTANCE{(unsigned)time(0)};
-        return INSTANCE;
-    }
+    Rng(unsigned seed) : m_random_engine{seed} {}
 
     template <typename T>
     T random()
@@ -27,9 +22,6 @@ public:
     }
 
 private:
-
-    Rng(unsigned seed) : m_random_engine{seed} {}
-    ~Rng() = default;
     Rng(const Rng&) = delete;
     Rng(Rng&&) = delete;
     Rng& operator=(const Rng&) = delete;

@@ -12,7 +12,6 @@
 #include <array>
 #include <limits>
 #include <cstdio>
-#include <random>
 
 template <typename COLOR_TYPE>
 struct PixelRGB
@@ -57,8 +56,7 @@ private:
     SPHERE_CONTAINER& m_spheres;
 };
 
-std::mt19937 random_engine(time(0));
-std::uniform_real_distribution<float> distr(0, 1);
+Rng rng{(unsigned)time(0)};
 
 Lambertian<float> material_ground{Vec{0.5, 0.5, 0.5}};
 Dialectric<float> material1{1.5};
@@ -90,19 +88,19 @@ void generate_world()
     for (auto& mat : material_lamb)
     {
         mat = Lambertian<float>{Vec{
-                distr(random_engine),
-                distr(random_engine),
-                distr(random_engine)}};
+                rng.random<float>(),
+                rng.random<float>(),
+                rng.random<float>()}};
     }
 
     for (auto& mat : material_metal)
     {
         auto albedo = Vec{
-            distr(random_engine)/2 + 0.5f,
-            distr(random_engine)/2 + 0.5f,
-            distr(random_engine)/2 + 0.5f
+            rng.random<float>(0.5, 1),
+            rng.random<float>(0.5, 1),
+            rng.random<float>(0.5, 1)
         };
-        auto fuzz = distr(random_engine)/2;
+        auto fuzz = rng.random<float>(0, 0.5);
         mat = Metal<float>{albedo, fuzz};
     }
 
@@ -114,25 +112,25 @@ void generate_world()
     int index = 4;
     for (int a = range_min; a < range_max; a++) {
         for (int b = range_min; b < range_max; b++) {
-            auto choose_mat = distr(random_engine);
-            Point center(a + 0.9*distr(random_engine),
+            auto choose_mat = rng.random<float>();
+            Point center(a + 0.9 * rng.random<float>(),
                          0.2,
-                         b + 0.9*distr(random_engine));
+                         b + 0.9 * rng.random<float>());
 
             if (make_vec(center, Point{4, 0.2, 0}).length() > 0.9) {
                 if (choose_mat < 0.8) {
                     // diffuse
-                    auto m = distr(random_engine) * num_lamb;
+                    auto m = rng.random<float>() * num_lamb;
                     auto& material = material_lamb[(int)m];
                     spheres[index] = {center, 0.2, &material};
                 } else if (choose_mat < 0.95) {
                     // metal
-                    auto m = distr(random_engine) * num_metal;
+                    auto m = rng.random<float>() * num_metal;
                     auto& material = material_metal[(int)m];
                     spheres[index] = {center, 0.2, &material};
                 } else {
                     // glass
-                    auto m = distr(random_engine) * num_glass;
+                    auto m = rng.random<float>() * num_glass;
                     auto& material = material_glass[(int)m];
                     spheres[index] = {center, 0.2, &material};
                 }
@@ -153,7 +151,8 @@ Vec color(const Ray& ray, const World& world, int depth)
         Ray scattered;
         Vec attenuation;
         bool ray_was_scattered = hit_record.material->scatter(
-            ray, hit_record, attenuation, scattered);
+            ray, hit_record, attenuation, scattered, rng);
+
         if (depth < 50 && ray_was_scattered)
         {
             return attenuation * color<T, World>(scattered, world, depth+1);
@@ -180,7 +179,6 @@ void generate_image(Image& image, const World& world)
     auto lookfrom = Point{13, 2, 3};
     auto lookat = Point{0, 0, 0};
     Camera<float> camera{
-        random_engine,
         lookfrom,
         lookat,
         Vec{0, 1, 0},
@@ -198,9 +196,9 @@ void generate_image(Image& image, const World& world)
             Vec pixel_color{0, 0, 0};
             for (int sample = 0; sample < num_samples; ++sample)
             {
-                const auto u = (x + distr(random_engine))/(image.width-1);
-                const auto v = (y + distr(random_engine))/(image.height-1);
-                const auto ray = camera.get_ray(u, v);
+                const auto u = (x + rng.random<float>())/(image.width-1);
+                const auto v = (y + rng.random<float>())/(image.height-1);
+                const auto ray = camera.get_ray(u, v, rng);
 
                 pixel_color = pixel_color + color<float, World>(ray, world, 0);
             }
