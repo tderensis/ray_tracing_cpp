@@ -22,9 +22,9 @@ Vec3<T> random_in_unit_sphere()
     Vec3<T> p{0, 0, 0};
     do {
         p = Vec3<T>{
-            Rng::instance().random<T, (T)-1, (T)1>(),
-            Rng::instance().random<T, (T)-1, (T)1>(),
-            Rng::instance().random<T, (T)-1, (T)1>()
+            Rng::instance().random<T>(-1, 1),
+            Rng::instance().random<T>(-1, 1),
+            Rng::instance().random<T>(-1, 1)
         };
     } while (p.squared_length() >= 1);
     return p;

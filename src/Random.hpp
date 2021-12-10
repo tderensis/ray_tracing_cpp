@@ -12,10 +12,10 @@ public:
         return INSTANCE;
     }
 
-    template <typename T, T start=(T)0, T end=(T)1>
+    template <typename T>
     T random()
     {
-        static std::uniform_real_distribution<T> distr(start, end);
+        static std::uniform_real_distribution<T> distr(0, 1);
         return distr(m_random_engine);
     }
 
@@ -25,6 +25,7 @@ public:
         std::uniform_real_distribution<T> distr(start, end);
         return distr(m_random_engine);
     }
+
 private:
 
     Rng(unsigned seed) : m_random_engine{seed} {}
