@@ -58,6 +58,89 @@ private:
 };
 
 std::mt19937 random_engine(time(0));
+std::uniform_real_distribution<float> distr(0, 1);
+
+Lambertian<float> material_ground{Vec{0.5, 0.5, 0.5}};
+Dialectric<float> material1{1.5};
+Lambertian<float> material2{Vec{0.4, 0.2, 0.1}};
+Metal<float> material3{Vec{0.7, 0.6, 0.5}, 0};
+
+constexpr auto range_min = -11;
+constexpr auto range_max = 11;
+constexpr int num_random = (range_max - range_min)*(range_max-range_min);
+constexpr int num_lamb = num_random * 0.8;
+constexpr int num_metal = num_random * 0.15;
+constexpr int num_glass = num_random - num_lamb - num_metal;
+
+std::array<Sphere, 4+num_random> spheres = {
+    Sphere{ Point{0, -1000, 0}, 1000, &material_ground },
+    Sphere{ Point{ 0, 1, 0}, 1,       &material1 },
+    Sphere{ Point{-4, 1, 0}, 1,       &material2 },
+    Sphere{ Point{ 4, 1, 0}, 1,       &material3 },
+};
+
+std::array<Lambertian<float>, num_lamb> material_lamb;
+std::array<Metal<float>, num_metal> material_metal;
+std::array<Dialectric<float>, num_glass> material_glass;
+
+World<decltype(spheres)> world{spheres};
+
+void generate_world()
+{
+    for (auto& mat : material_lamb)
+    {
+        mat = Lambertian<float>{Vec{
+                distr(random_engine),
+                distr(random_engine),
+                distr(random_engine)}};
+    }
+
+    for (auto& mat : material_metal)
+    {
+        auto albedo = Vec{
+            distr(random_engine)/2 + 0.5f,
+            distr(random_engine)/2 + 0.5f,
+            distr(random_engine)/2 + 0.5f
+        };
+        auto fuzz = distr(random_engine)/2;
+        mat = Metal<float>{albedo, fuzz};
+    }
+
+    for (auto& mat : material_glass)
+    {
+        mat = Dialectric<float>{1.5};
+    }
+
+    int index = 4;
+    for (int a = range_min; a < range_max; a++) {
+        for (int b = range_min; b < range_max; b++) {
+            auto choose_mat = distr(random_engine);
+            Point center(a + 0.9*distr(random_engine),
+                         0.2,
+                         b + 0.9*distr(random_engine));
+
+            if (make_vec(center, Point{4, 0.2, 0}).length() > 0.9) {
+                if (choose_mat < 0.8) {
+                    // diffuse
+                    auto m = distr(random_engine) * num_lamb;
+                    auto& material = material_lamb[(int)m];
+                    spheres[index] = {center, 0.2, &material};
+                } else if (choose_mat < 0.95) {
+                    // metal
+                    auto m = distr(random_engine) * num_metal;
+                    auto& material = material_metal[(int)m];
+                    spheres[index] = {center, 0.2, &material};
+                } else {
+                    // glass
+                    auto m = distr(random_engine) * num_glass;
+                    auto& material = material_glass[(int)m];
+                    spheres[index] = {center, 0.2, &material};
+                }
+                index++;
+            }
+        }
+    }
+}
 
 template <typename T, typename World>
 Vec color(const Ray& ray, const World& world, int depth)
@@ -163,90 +246,9 @@ constexpr int image_height = image_width / aspect_ratio;
 
 Image<PixelRGB<int>, image_width, image_height> image;
 
-Lambertian<float> material_ground{Vec{0.5, 0.5, 0.5}};
-Dialectric<float> material1{1.5};
-Lambertian<float> material2{Vec{0.4, 0.2, 0.1}};
-Metal<float> material3{Vec{0.7, 0.6, 0.5}, 0};
-
-
-std::uniform_real_distribution<float> distr(0, 1);
-
-constexpr auto range_min = -11;
-constexpr auto range_max = 11;
-constexpr int num_random = (range_max - range_min)*(range_max-range_min);
-constexpr int num_lamb = num_random * 0.8;
-constexpr int num_metal = num_random * 0.15;
-constexpr int num_glass = num_random - num_lamb - num_metal;
-
-std::array<Sphere, 4+num_random> spheres = {
-    Sphere{ Point{0, -1000, 0}, 1000, &material_ground },
-    Sphere{ Point{ 0, 1, 0}, 1,       &material1 },
-    Sphere{ Point{-4, 1, 0}, 1,       &material2 },
-    Sphere{ Point{ 4, 1, 0}, 1,       &material3 },
-};
-
-std::array<Lambertian<float>, num_lamb> material_lamb;
-std::array<Metal<float>, num_metal> material_metal;
-std::array<Dialectric<float>, num_glass> material_glass;
-
-World<decltype(spheres)> world{spheres};
-
 int main()
 {
-    for (auto& mat : material_lamb)
-    {
-        mat = Lambertian<float>{Vec{
-                distr(random_engine),
-                distr(random_engine),
-                distr(random_engine)}};
-    }
-
-    for (auto& mat : material_metal)
-    {
-        auto albedo = Vec{
-            distr(random_engine)/2 + 0.5f,
-            distr(random_engine)/2 + 0.5f,
-            distr(random_engine)/2 + 0.5f
-        };
-        auto fuzz = distr(random_engine)/2;
-        mat = Metal<float>{albedo, fuzz};
-    }
-
-    for (auto& mat : material_glass)
-    {
-        mat = Dialectric<float>{1.5};
-    }
-
-    int index = 4;
-    for (int a = range_min; a < range_max; a++) {
-        for (int b = range_min; b < range_max; b++) {
-            auto choose_mat = distr(random_engine);
-            Point center(a + 0.9*distr(random_engine),
-                         0.2,
-                         b + 0.9*distr(random_engine));
-
-            if (make_vec(center, Point{4, 0.2, 0}).length() > 0.9) {
-                if (choose_mat < 0.8) {
-                    // diffuse
-                    auto m = distr(random_engine) * num_lamb;
-                    auto& material = material_lamb[(int)m];
-                    spheres[index] = {center, 0.2, &material};
-                } else if (choose_mat < 0.95) {
-                    // metal
-                    auto m = distr(random_engine) * num_metal;
-                    auto& material = material_metal[(int)m];
-                    spheres[index] = {center, 0.2, &material};
-                } else {
-                    // glass
-                    auto m = distr(random_engine) * num_glass;
-                    auto& material = material_glass[(int)m];
-                    spheres[index] = {center, 0.2, &material};
-                }
-                index++;
-            }
-        }
-    }
-
+    generate_world();
     generate_image(image, world);
     print_ppm_image(image);
 
