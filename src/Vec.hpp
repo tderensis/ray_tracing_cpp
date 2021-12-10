@@ -55,7 +55,7 @@ inline Vec3<T> cross(const Vec3<T>& v1, const Vec3<T>& v2)
 
 
 template <typename T>
-Vec3<T> reflect(const Vec3<T>& v, const Vec3<T>& n)
+inline Vec3<T> reflect(const Vec3<T>& v, const Vec3<T>& n)
 {
     return v - 2 * dot(v, n) * n;
 }
