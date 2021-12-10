@@ -71,10 +71,10 @@ Rng rng{(unsigned)time(0)};
 constexpr int depth = 50;
 constexpr int num_samples_per_pixel = 100;
 
-LambertianMat material_ground{Vec{0.5, 0.5, 0.5}};
-DialectricMat material1{1.5};
-LambertianMat material2{Vec{0.4, 0.2, 0.1}};
-MetalMat      material3{Vec{0.7, 0.6, 0.5}, 0};
+constexpr LambertianMat material_ground{Vec{0.5, 0.5, 0.5}};
+constexpr DialectricMat material1{1.5};
+constexpr LambertianMat material2{Vec{0.4, 0.2, 0.1}};
+constexpr MetalMat      material3{Vec{0.7, 0.6, 0.5}, 0};
 
 constexpr auto range_min = -11;
 constexpr auto range_max = 11;

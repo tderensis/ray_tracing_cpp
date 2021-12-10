@@ -6,8 +6,8 @@ template <typename T = float>
 class Vec3
 {
 public:
-    Vec3() = default;
-    Vec3(T e0, T e1, T e2) : m_e{e0, e1, e2} {}
+    constexpr Vec3() = default;
+    constexpr Vec3(T e0, T e1, T e2) : m_e{e0, e1, e2} {}
 
     T x() const { return m_e[0]; }
     T y() const { return m_e[1]; }

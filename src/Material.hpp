@@ -35,7 +35,8 @@ template <typename T>
 class Lambertian : public Material<T>
 {
 public:
-    Lambertian(const Vec3<T>& a = {}) : m_albedo{a} {}
+    constexpr Lambertian() = default;
+    constexpr Lambertian(const Vec3<T>& a) : m_albedo{a} {}
 
     virtual bool scatter(
         const Ray3<Point3<T>, Vec3<T>>& ray,
@@ -59,8 +60,8 @@ template <typename T>
 class Metal : public Material<T>
 {
 public:
-    Metal() = default;
-    Metal(const Vec3<T>& a, T fuzz) :
+    constexpr Metal() = default;
+    constexpr Metal(const Vec3<T>& a, T fuzz) :
         m_albedo{a},
         m_fuzz{fuzz}
     {}
@@ -108,8 +109,8 @@ template <typename T>
 class Dialectric : public Material<T>
 {
 public:
-    Dialectric() = default;
-    Dialectric(T ri) : m_refraction_index{ri} {}
+    constexpr Dialectric() = default;
+    constexpr Dialectric(T ri) : m_refraction_index{ri} {}
 
     virtual bool scatter(
         const Ray3<Point3<T>, Vec3<T>>& ray,

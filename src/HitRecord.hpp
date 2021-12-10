@@ -12,6 +12,6 @@ struct HitRecord
     T t;
     Point3<T> p;
     Vec3<T> normal;
-    Material<T>* material;
+    const Material<T>* material;
     bool front_face;
 };
