@@ -66,6 +66,9 @@ using MetalMat = Metal<UnderlyingType>;
 
 Rng rng{(unsigned)time(0)};
 
+constexpr int depth = 50;
+constexpr int num_samples_per_pixel = 100;
+
 LambertianMat material_ground{Vec{0.5, 0.5, 0.5}};
 DialectricMat material1{1.5};
 LambertianMat material2{Vec{0.4, 0.2, 0.1}};
@@ -161,9 +164,9 @@ Vec color(const Ray& ray, const World& world, int depth)
         bool ray_was_scattered = hit_record.material->scatter(
             ray, hit_record, attenuation, scattered, rng);
 
-        if (depth < 50 && ray_was_scattered)
+        if (depth != 0 && ray_was_scattered)
         {
-            auto pixel_color = color<T, World>(scattered, world, depth+1);
+            auto pixel_color = color<T, World>(scattered, world, depth-1);
             return {
                 attenuation.x() * pixel_color.x(),
                 attenuation.y() * pixel_color.y(),
@@ -200,22 +203,21 @@ void generate_image(Image& image, const World& world)
         0.1,
         10
     };
-    auto num_samples = 100;
 
     for (int y = 0; y < image.height; ++y)
     {
         for (int x = 0; x < image.width; ++x)
         {
             Vec pixel_color{0, 0, 0};
-            for (int sample = 0; sample < num_samples; ++sample)
+            for (int sample = 0; sample < num_samples_per_pixel; ++sample)
             {
                 const auto u = (x + rng.random<UnderlyingType>())/(image.width-1);
                 const auto v = (y + rng.random<UnderlyingType>())/(image.height-1);
                 const auto ray = camera.get_ray(u, v, rng);
 
-                pixel_color = pixel_color + color<UnderlyingType, World>(ray, world, 0);
+                pixel_color = pixel_color + color<UnderlyingType, World>(ray, world, depth);
             }
-            pixel_color = pixel_color / (UnderlyingType) num_samples;
+            pixel_color = pixel_color / (UnderlyingType) num_samples_per_pixel;
 
             // gamma corrected
             pixel_color = Vec{
