@@ -9,22 +9,24 @@ public:
     Vec3() = default;
     Vec3(T e0, T e1, T e2) : m_e{e0, e1, e2} {}
 
-    inline T x() const { return m_e[0]; }
-    inline T y() const { return m_e[1]; }
-    inline T z() const { return m_e[2]; }
+    T x() const { return m_e[0]; }
+    T y() const { return m_e[1]; }
+    T z() const { return m_e[2]; }
 
-    inline Vec3<T> operator-() const { return {-m_e[0], -m_e[1], -m_e[2]}; }
-    inline T length() const
+    Vec3<T> operator-() const { return {-m_e[0], -m_e[1], -m_e[2]}; }
+
+    T length() const
     {
         return sqrt(squared_length());
     }
 
-    inline T squared_length() const
+    T squared_length() const
     {
         return m_e[0] * m_e[0] +
                m_e[1] * m_e[1] +
                m_e[2] * m_e[2];
     }
+
 private:
     T m_e[3] = {};
 };
@@ -75,16 +77,6 @@ inline Vec3<T> operator-(const Vec3<T>& v1, const Vec3<T>& v2)
         v1.x() - v2.x(),
         v1.y() - v2.y(),
         v1.z() - v2.z()
-    };
-}
-
-template <typename T>
-inline Vec3<T> operator*(const Vec3<T>& v1, const Vec3<T>& v2)
-{
-    return Vec3<T>{
-        v1.x() * v2.x(),
-        v1.y() * v2.y(),
-        v1.z() * v2.z()
     };
 }
 

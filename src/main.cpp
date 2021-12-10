@@ -163,7 +163,12 @@ Vec color(const Ray& ray, const World& world, int depth)
 
         if (depth < 50 && ray_was_scattered)
         {
-            return attenuation * color<T, World>(scattered, world, depth+1);
+            auto pixel_color = color<T, World>(scattered, world, depth+1);
+            return {
+                attenuation.x() * pixel_color.x(),
+                attenuation.y() * pixel_color.y(),
+                attenuation.z() * pixel_color.z()
+            };
         }
         else
         {
