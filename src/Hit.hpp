@@ -20,7 +20,7 @@ bool hit(
 
     if (discriminant < 0)
     {
-            return false;
+        return false;
     }
 
     auto sqrt_discriminant = sqrt(discriminant);
@@ -30,7 +30,7 @@ bool hit(
 
     if (root < t_min || root > t_max)
     {
-        root = -(half_b - sqrt_discriminant) / a;
+        root = (-half_b + sqrt_discriminant) / a;
         if (root < t_min || root > t_max)
         {
             return false;
@@ -39,7 +39,11 @@ bool hit(
 
     record.t = root;
     record.p = ray.point_at_parameter(record.t);
-    record.normal = make_vec(record.p, sphere.center()) / sphere.radius();
+
+    auto outward_normal = make_vec(record.p, sphere.center()) / sphere.radius();
+
+    record.front_face = dot(ray.direction(), outward_normal) < 0;
+    record.normal = record.front_face ? outward_normal : -outward_normal;
     record.material = sphere.material();
 
     return true;

@@ -88,27 +88,18 @@ private:
 };
 
 template <typename T>
-bool refract(const Vec3<T>& v, const Vec3<T> n, T ni_over_nt,
-             Vec3<T>& refracted)
+Vec3<T> refract(const Vec3<T>& v, const Vec3<T> n, T ni_over_nt)
 {
-    auto uv = unit_vector(v);
-    auto dt = dot(uv, n);
-    auto discriminant = 1 - ni_over_nt * ni_over_nt * (1 - dt * dt);
-    if (discriminant > 0)
-    {
-        refracted = ni_over_nt * (uv - n * dt) -
-            n * (T)sqrt(discriminant);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    auto cosine = std::min(dot(-v, n), (T)1);
+    Vec3<T> r_out_perp = ni_over_nt * (v + cosine * n);
+    Vec3<T> r_out_parallel = -sqrt(abs(1 - r_out_perp.squared_length())) * n;
+    return r_out_perp + r_out_parallel;
 }
 
 template <typename T>
-T schlick(float cosine, float ref_idx)
+T reflectance(T cosine, T ref_idx)
 {
+    // Schlick's approximation
     auto r0 = (1 - ref_idx) / (1 + ref_idx);
     return r0 * r0 + (1 - r0 * r0) * pow(1 - cosine, 5);
 }
@@ -129,38 +120,23 @@ public:
     {
         attenuation = {1, 1, 1};
 
-        auto dp = dot(ray.direction(), hit_record.normal);
-        bool result = (dp > 0);
+        auto refraction_ratio = hit_record.front_face ?
+            1 / m_refraction_index : m_refraction_index;
 
-        auto outward_normal = result ? -hit_record.normal :
-                                        hit_record.normal;
-        auto ni_over_nt = result ? m_refraction_index :
-                                   1 / m_refraction_index;
-        auto cosine = result ?
-            m_refraction_index * dp / ray.direction().length() :
-            -dp / ray.direction().length();
+        auto unit_direction = unit_vector(ray.direction());
 
-        Vec3<T> refracted;
+        auto cosine = std::min(dot(-unit_direction, hit_record.normal), (T)1);
+        auto sine   = sqrt(1 - cosine * cosine);
 
-        if (refract(ray.direction(), outward_normal, ni_over_nt, refracted))
-        {
-            auto refract_prob = schlick<T>(cosine, m_refraction_index);
+        bool cannot_refract = refraction_ratio * sine > 1;
 
-            if (rng.random<T>() < refract_prob)
-            {
-                auto reflected = reflect(ray.direction(), hit_record.normal);
-                scattered = {hit_record.p, reflected};
-            }
-            else
-            {
-                scattered = {hit_record.p, refracted};
-            }
-        }
-        else
-        {
-            auto reflected = reflect(ray.direction(), hit_record.normal);
-            scattered = {hit_record.p, reflected};
-        }
+        Vec3<T> direction =
+            cannot_refract || reflectance(cosine, refraction_ratio) > rng.random<T>() ?
+            reflect(unit_direction, hit_record.normal) :
+            refract(unit_direction, hit_record.normal, refraction_ratio);
+
+        scattered = {hit_record.p, direction};
+
         return true;
     }
 
