@@ -13,30 +13,34 @@ bool hit(
     T t_min, T t_max, HitRecord<T>& record)
 {
     auto oc = make_vec(ray.origin(), sphere.center());
-    auto a = dot(ray.direction(), ray.direction());
-    auto b = 2 * dot(oc, ray.direction());
-    auto c = dot(oc, oc) - sphere.radius() * sphere.radius();
-    auto discriminant = b * b - 4 * a * c;
-    if (discriminant > 0)
+    auto a = ray.direction().squared_length();
+    auto half_b = dot(oc, ray.direction());
+    auto c = oc.squared_length() - sphere.radius() * sphere.radius();
+    auto discriminant = half_b * half_b - a * c;
+
+    if (discriminant < 0)
     {
-        auto temp = -(b + sqrt(discriminant)) / (2 * a);
-        if (temp < t_max && temp > t_min)
+            return false;
+    }
+
+    auto sqrt_discriminant = sqrt(discriminant);
+
+    // Find the nearest root that is in the range
+    auto root = (-half_b - sqrt_discriminant) / a;
+
+    if (root < t_min || root > t_max)
+    {
+        root = -(half_b - sqrt_discriminant) / a;
+        if (root < t_min || root > t_max)
         {
-            record.t = temp;
-            record.p = ray.point_at_parameter(record.t);
-            record.normal = make_vec(record.p, sphere.center()) * (1 / sphere.radius());
-            record.material = sphere.material();
-            return true;
-        }
-        temp = -(b - sqrt(discriminant)) / (2 * a);
-        if (temp < t_max && temp > t_min)
-        {
-            record.t = temp;
-            record.p = ray.point_at_parameter(record.t);
-            record.normal = make_vec(record.p, sphere.center()) * (1 / sphere.radius());
-            record.material = sphere.material();
-            return true;
+            return false;
         }
     }
-    return false;
+
+    record.t = root;
+    record.p = ray.point_at_parameter(record.t);
+    record.normal = make_vec(record.p, sphere.center()) / sphere.radius();
+    record.material = sphere.material();
+
+    return true;
 }
