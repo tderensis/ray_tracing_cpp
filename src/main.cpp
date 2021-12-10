@@ -157,8 +157,15 @@ template <typename T, typename World>
 PixelColor color(const Ray& ray, const World& world, int depth)
 {
     HitRecord<T> hit_record;
+
+    if (depth <= 0)
+    {
+        return {0, 0, 0};
+    }
+
     constexpr T t_min = 0.001;
     constexpr T t_max = std::numeric_limits<T>::max();
+
     if (world.is_hit(ray, t_min, t_max, hit_record))
     {
         Ray scattered;
@@ -166,7 +173,7 @@ PixelColor color(const Ray& ray, const World& world, int depth)
         bool ray_was_scattered = hit_record.material->scatter(
             ray, hit_record, attenuation, scattered, rng);
 
-        if (depth != 0 && ray_was_scattered)
+        if (ray_was_scattered)
         {
             auto pixel_color = color<T, World>(scattered, world, depth-1);
             return attenuation * pixel_color;
