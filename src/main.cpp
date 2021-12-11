@@ -18,9 +18,9 @@ template <typename SPHERE_CONTAINER>
 class World
 {
 public:
-    World(SPHERE_CONTAINER& spheres)
+    World(SPHERE_CONTAINER& sphere_container)
         :
-        m_spheres{spheres}
+        m_spheres{sphere_container}
     {}
 
     template <typename T>
@@ -44,6 +44,28 @@ public:
         return hit_anything;
     }
 
+    template <typename T>
+    bool get_bounding_box(
+        T t0,
+        T t1,
+        Aabb<T>& output_box) const
+    {
+        bool first_box = true;
+        for (const auto& sphere : m_spheres)
+        {
+            Aabb<T> temp_box;
+            if (!bounding_box<T>(sphere, t0, t1, temp_box))
+            {
+                return false;
+            }
+            output_box = first_box ?
+                temp_box : surrounding_box(output_box, temp_box);
+            first_box = false;
+        }
+
+        return true;
+    }
+
 private:
     SPHERE_CONTAINER& m_spheres;
 };
@@ -60,7 +82,7 @@ using PixelColor = Color<UnderlyingType>;
 
 Rng rng{(unsigned)time(0)};
 
-constexpr int depth = 50;
+constexpr int max_depth = 50;
 constexpr int num_samples_per_pixel = 100;
 
 constexpr LambertianMat material_ground{Vec{0.5, 0.5, 0.5}};
@@ -86,7 +108,7 @@ std::array<LambertianMat, num_lamb>  material_lamb;
 std::array<MetalMat,      num_metal> material_metal;
 std::array<DialectricMat, num_glass> material_glass;
 
-World<decltype(spheres)> world{spheres};
+World<decltype(spheres)> random_world{spheres};
 
 void generate_world()
 {
@@ -202,7 +224,7 @@ void generate_image(
                 const auto v = (y + rng.random<UnderlyingType>())/(image.height-1);
                 const auto ray = camera.get_ray(u, v, rng);
 
-                pixel_color = pixel_color + color<UnderlyingType, World>(ray, world, depth);
+                pixel_color = pixel_color + color<UnderlyingType, World>(ray, world, max_depth);
             }
             pixel_color = pixel_color / (UnderlyingType) num_samples_per_pixel;
 
@@ -256,9 +278,8 @@ int main()
         10
     };
 
-
     generate_world();
-    generate_image(image, world, camera);
+    generate_image(image, random_world, camera);
     print_ppm_image(image);
 
     return 0;
