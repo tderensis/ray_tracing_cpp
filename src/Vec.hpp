@@ -9,18 +9,21 @@ public:
     constexpr Vec3() = default;
     constexpr Vec3(T e0, T e1, T e2) : m_e{e0, e1, e2} {}
 
-    T x() const { return m_e[0]; }
-    T y() const { return m_e[1]; }
-    T z() const { return m_e[2]; }
+    constexpr T x() const { return m_e[0]; }
+    constexpr T y() const { return m_e[1]; }
+    constexpr T z() const { return m_e[2]; }
 
-    Vec3<T> operator-() const { return {-m_e[0], -m_e[1], -m_e[2]}; }
+    constexpr Vec3<T> operator-() const
+    {
+        return {-m_e[0], -m_e[1], -m_e[2]};
+    }
 
-    T length() const
+    constexpr T length() const
     {
         return sqrt(squared_length());
     }
 
-    T squared_length() const
+    constexpr T squared_length() const
     {
         return m_e[0] * m_e[0] +
                m_e[1] * m_e[1] +
@@ -32,19 +35,19 @@ private:
 };
 
 template <typename T>
-inline Vec3<T> unit_vector(const Vec3<T>& v)
+constexpr inline Vec3<T> unit_vector(const Vec3<T>& v)
 {
     return v / v.length();
 }
 
 template <typename T>
-inline T dot(const Vec3<T>& v1, const Vec3<T>& v2)
+constexpr inline T dot(const Vec3<T>& v1, const Vec3<T>& v2)
 {
     return v1.x() * v2.x() + v1.y() * v2.y() + v1.z() * v2.z();
 }
 
 template <typename T>
-inline Vec3<T> cross(const Vec3<T>& v1, const Vec3<T>& v2)
+constexpr inline Vec3<T> cross(const Vec3<T>& v1, const Vec3<T>& v2)
 {
     return {
         v1.y() * v2.z() - v1.z() * v2.y(),
@@ -55,13 +58,13 @@ inline Vec3<T> cross(const Vec3<T>& v1, const Vec3<T>& v2)
 
 
 template <typename T>
-inline Vec3<T> reflect(const Vec3<T>& v, const Vec3<T>& n)
+constexpr inline Vec3<T> reflect(const Vec3<T>& v, const Vec3<T>& n)
 {
     return v - 2 * dot(v, n) * n;
 }
 
 template <typename T>
-inline Vec3<T> operator+(const Vec3<T>& v1, const Vec3<T>& v2)
+constexpr inline Vec3<T> operator+(const Vec3<T>& v1, const Vec3<T>& v2)
 {
     return Vec3<T>{
         v1.x() + v2.x(),
@@ -71,7 +74,7 @@ inline Vec3<T> operator+(const Vec3<T>& v1, const Vec3<T>& v2)
 }
 
 template <typename T>
-inline Vec3<T> operator-(const Vec3<T>& v1, const Vec3<T>& v2)
+constexpr inline Vec3<T> operator-(const Vec3<T>& v1, const Vec3<T>& v2)
 {
     return Vec3<T>{
         v1.x() - v2.x(),
@@ -81,7 +84,7 @@ inline Vec3<T> operator-(const Vec3<T>& v1, const Vec3<T>& v2)
 }
 
 template <typename T>
-inline Vec3<T> operator*(T t, const Vec3<T>& v)
+constexpr inline Vec3<T> operator*(T t, const Vec3<T>& v)
 {
     return Vec3<T>{
         t * v.x(),
@@ -91,7 +94,7 @@ inline Vec3<T> operator*(T t, const Vec3<T>& v)
 }
 
 template <typename T>
-inline Vec3<T> operator*(const Vec3<T>& v, T t)
+constexpr inline Vec3<T> operator*(const Vec3<T>& v, T t)
 {
     return Vec3<T>{
         t * v.x(),
@@ -101,7 +104,7 @@ inline Vec3<T> operator*(const Vec3<T>& v, T t)
 }
 
 template <typename T>
-inline Vec3<T> operator/(const Vec3<T>& v, T t)
+constexpr inline Vec3<T> operator/(const Vec3<T>& v, T t)
 {
     return Vec3<T>{
         v.x() / t,

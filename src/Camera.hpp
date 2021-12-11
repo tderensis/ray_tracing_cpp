@@ -19,13 +19,14 @@ template <typename T>
 class Camera
 {
 public:
-    Camera(Point3<T> lookfrom,
-           Point3<T> lookat,
-           Vec3<T> vup,
-           T vfov,
-           T aspect,
-           T apeture,
-           T focus_dist)
+    constexpr Camera(
+        Point3<T> lookfrom,
+        Point3<T> lookat,
+        Vec3<T> vup,
+        T vfov,
+        T aspect,
+        T apeture,
+        T focus_dist) : m_lens_radius{apeture / 2}
     {
         T theta = vfov * M_PI / 180;
         T half_height = tan(theta/2);
@@ -42,7 +43,6 @@ public:
             focus_dist * m_w;
         m_horizontal = 2 * focus_dist * half_width * m_u;
         m_vertical   = 2 * focus_dist * half_height * m_v;
-        m_lens_radius = apeture / 2;
     }
 
     Ray3<Point3<T>, Vec3<T>> get_ray(T u, T v, Rng& rng) const

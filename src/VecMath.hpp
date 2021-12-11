@@ -5,7 +5,7 @@
 #include "Color.hpp"
 
 template <typename T>
-inline Point3<T> operator+(const Point3<T>& p, const Vec3<T>& v)
+constexpr inline Point3<T> operator+(const Point3<T>& p, const Vec3<T>& v)
 {
     return {
         p.x() + v.x(),
@@ -15,7 +15,7 @@ inline Point3<T> operator+(const Point3<T>& p, const Vec3<T>& v)
 }
 
 template <typename T>
-inline Point3<T> operator+(const Vec3<T>& v, const Point3<T>& p)
+constexpr inline Point3<T> operator+(const Vec3<T>& v, const Point3<T>& p)
 {
     return {
         p.x() + v.x(),
@@ -25,7 +25,7 @@ inline Point3<T> operator+(const Vec3<T>& v, const Point3<T>& p)
 }
 
 template <typename T>
-inline Point3<T> operator-(const Point3<T>& p, const Vec3<T>& v)
+constexpr inline Point3<T> operator-(const Point3<T>& p, const Vec3<T>& v)
 {
     return {
         p.x() - v.x(),
@@ -35,7 +35,7 @@ inline Point3<T> operator-(const Point3<T>& p, const Vec3<T>& v)
 }
 
 template <typename T>
-inline Point3<T> operator-(const Vec3<T>& v, const Point3<T>& p)
+constexpr inline Point3<T> operator-(const Vec3<T>& v, const Point3<T>& p)
 {
     return {
         v.x() - p.x(),
@@ -45,19 +45,7 @@ inline Point3<T> operator-(const Vec3<T>& v, const Point3<T>& p)
 }
 
 template <typename T>
-inline T dot(const Point3<T>& p, const Vec3<T>& v)
-{
-    return p.x() * v.x() + p.y() * v.y() + p.z() * v.z();
-}
-
-template <typename T>
-inline T dot(const Vec3<T>& v, const Point3<T>& p)
-{
-    return p.x() * v.x() + p.y() * v.y() + p.z() * v.z();
-}
-
-template <typename T>
-inline Vec3<T> make_vec(const Point3<T>& p1, const Point3<T>& p2)
+constexpr inline Vec3<T> make_vec(const Point3<T>& p1, const Point3<T>& p2)
 {
     return {
         p1.x() - p2.x(),
@@ -67,7 +55,7 @@ inline Vec3<T> make_vec(const Point3<T>& p1, const Point3<T>& p2)
 }
 
 template <typename T>
-inline Color<T> operator*(const Vec3<T>& v, const Color<T>& c)
+constexpr inline Color<T> operator*(const Vec3<T>& v, const Color<T>& c)
 {
     return {
         v.x() * c.r(),
@@ -77,7 +65,7 @@ inline Color<T> operator*(const Vec3<T>& v, const Color<T>& c)
 }
 
 template <typename T>
-inline Color<T> operator*(const Color<T>& c, const Vec3<T>& v)
+constexpr inline Color<T> operator*(const Color<T>& c, const Vec3<T>& v)
 {
     return {
         v.x() * c.r(),

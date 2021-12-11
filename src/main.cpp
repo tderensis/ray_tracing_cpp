@@ -14,14 +14,6 @@
 #include <limits>
 #include <cstdio>
 
-template <typename COLOR_TYPE>
-struct PixelRGB
-{
-    COLOR_TYPE r;
-    COLOR_TYPE g;
-    COLOR_TYPE b;
-};
-
 template <typename SPHERE_CONTAINER>
 class World
 {
@@ -193,22 +185,12 @@ PixelColor color(const Ray& ray, const World& world, int depth)
     }
 }
 
-template <typename Image, typename World>
-void generate_image(Image& image, const World& world)
+template <typename Image, typename World, typename Camera>
+void generate_image(
+    Image& image,
+    const World& world,
+    const Camera& camera)
 {
-    auto lookfrom = Point{13, 2, 3};
-    auto lookat = Point{0, 0, 0};
-
-    Camera<UnderlyingType> camera{
-        lookfrom,
-        lookat,
-        Vec{0, 1, 0},
-        20,
-        (UnderlyingType)image.width/image.height,
-        0.1,
-        10
-    };
-
     for (int y = 0; y < image.height; ++y)
     {
         for (int x = 0; x < image.width; ++x)
@@ -248,7 +230,7 @@ void print_ppm_image(const Image& image)
         for (int x = 0; x < image.width; ++x)
         {
             auto pixel = image[x][y];
-            printf("%d %d %d\n", pixel.r, pixel.g, pixel.b);
+            printf("%d %d %d\n", pixel.r(), pixel.g(), pixel.b());
         }
     }
 }
@@ -257,12 +239,26 @@ constexpr auto aspect_ratio = 16.0/9.0;
 constexpr int image_width = 400;
 constexpr int image_height = image_width / aspect_ratio;
 
-Image<PixelRGB<int>, image_width, image_height> image;
+Image<Color<int>, image_width, image_height> image;
 
 int main()
 {
+    constexpr auto lookfrom = Point{13, 2, 3};
+    constexpr auto lookat = Point{0, 0, 0};
+
+    constexpr Camera<UnderlyingType> camera{
+        lookfrom,
+        lookat,
+        Vec{0, 1, 0},
+        20,
+        (UnderlyingType)image.width/image.height,
+        0.1,
+        10
+    };
+
+
     generate_world();
-    generate_image(image, world);
+    generate_image(image, world, camera);
     print_ppm_image(image);
 
     return 0;
