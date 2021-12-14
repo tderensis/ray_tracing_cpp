@@ -14,8 +14,8 @@
 #include <limits>
 #include <cstdio>
 
-template <typename SPHERE_CONTAINER>
-class World
+template <typename T, typename SPHERE_CONTAINER>
+class World : public Hittable<T>
 {
 public:
     World(SPHERE_CONTAINER& sphere_container)
@@ -23,18 +23,17 @@ public:
         m_spheres{sphere_container}
     {}
 
-    template <typename T>
-    bool is_hit(
+    bool hit(
         const Ray3<Point3<T>, Vec3<T>>& ray,
         T t_min,
         T t_max,
-        HitRecord<T>& record) const
+        HitRecord<T>& record) const override
     {
         bool hit_anything = false;
         auto closest_so_far = t_max;
         for (const auto& sphere : m_spheres)
         {
-            if (hit<T>(sphere, ray, t_min, closest_so_far, record))
+            if (sphere.hit(ray, t_min, closest_so_far, record))
             {
                 hit_anything = true;
                 closest_so_far = record.t;
@@ -42,28 +41,6 @@ public:
         }
 
         return hit_anything;
-    }
-
-    template <typename T>
-    bool get_bounding_box(
-        T t0,
-        T t1,
-        Aabb<T>& output_box) const
-    {
-        bool first_box = true;
-        for (const auto& sphere : m_spheres)
-        {
-            Aabb<T> temp_box;
-            if (!bounding_box<T>(sphere, t0, t1, temp_box))
-            {
-                return false;
-            }
-            output_box = first_box ?
-                temp_box : surrounding_box(output_box, temp_box);
-            first_box = false;
-        }
-
-        return true;
     }
 
 private:
@@ -108,7 +85,7 @@ std::array<LambertianMat, num_lamb>  material_lamb;
 std::array<MetalMat,      num_metal> material_metal;
 std::array<DialectricMat, num_glass> material_glass;
 
-World<decltype(spheres)> random_world{spheres};
+World<UnderlyingType, decltype(spheres)> random_world{spheres};
 
 void generate_world()
 {
@@ -180,7 +157,7 @@ PixelColor color(const Ray& ray, const World& world, int depth)
     constexpr T t_min = 0.001;
     constexpr T t_max = std::numeric_limits<T>::max();
 
-    if (world.is_hit(ray, t_min, t_max, hit_record))
+    if (world.hit(ray, t_min, t_max, hit_record))
     {
         Ray scattered;
         Vec attenuation;
